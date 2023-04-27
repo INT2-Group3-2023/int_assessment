@@ -20,6 +20,11 @@ def scale_resize_image(image, label):
     image = tf.image.resize(image, (120, 120)) # Resizing the image to 120x120 dimension
     return (image, label)
 
+#converts images to greyscale
+def rgb_convert(image, label):
+    image = tf.image.rgb_to_grayscale(image)
+    return (image, label)
+
 AUTO = tf.data.experimental.AUTOTUNE
 BATCH_SIZE = 256
 
@@ -27,7 +32,7 @@ training_ds = (
     train_ds
     .map(scale_resize_image)
 )
-
+#training_ds = (training_ds.map(rgb_convert))
 training_ds = training_ds.batch(BATCH_SIZE)
 
 for example in training_ds:
