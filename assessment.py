@@ -25,18 +25,21 @@ def rgb_convert(image, label):
     image = tf.image.rgb_to_grayscale(image)
     return (image, label)
 
+#crops image about the centre
+def crop_image(image, label):
+    image = tf.image.resize_with_crop_or_pad(image, 500, 500)
+    return (image, label)
+
 AUTO = tf.data.experimental.AUTOTUNE
 BATCH_SIZE = 256
 
-training_ds = (
-    train_ds
-    .map(scale_resize_image)
-)
+#training_ds = (train_ds.map(crop_image)
 #training_ds = (training_ds.map(rgb_convert))
+training_ds = (train_ds.map(scale_resize_image))
 training_ds = training_ds.batch(BATCH_SIZE)
 
-for example in training_ds:
-  print(tf.shape(tf.expand_dims(example[0], axis = 0)))
+#for example in training_ds:
+#  print(tf.shape(tf.expand_dims(example[0], axis = 0)))
 
 model = keras.Sequential([
     keras.Input((120, 120, 3)),
