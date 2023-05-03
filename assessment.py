@@ -63,6 +63,8 @@ print(counter)
 #fig = tfds.show_examples(training_ds, ds_info, rows = 4, cols = 4)
 
 model = keras.Sequential([
+    keras.layers.RandomFlip("horizontal_and_vertical"),
+    keras.layers.RandomRotation(0.2),
     keras.Input((128, 128, 3)),
     keras.layers.Conv2D(16, 3, activation='relu'),
     keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
@@ -76,7 +78,7 @@ model = keras.Sequential([
     keras.layers.Dense(102, activation=tf.nn.softmax)
 ])
 
-model.summary()
+#model.summary()
 
 model.compile(
     optimizer = keras.optimizers.Adam(learning_rate = 0.001),
