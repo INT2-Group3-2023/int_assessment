@@ -12,10 +12,9 @@ import tensorflow as tf
 from tensorflow import keras
 from keras import layers
 import tensorflow_datasets as tfds
-import matplotlib.pyplot as plt
 
-data, ds_info = tfds.load('oxford_flowers102', 
-                         with_info=True, 
+data, ds_info = tfds.load('oxford_flowers102',
+                         with_info=True,
                           as_supervised=True,
                           shuffle_files = True)
 train_ds, valid_ds, test_ds = data['train'], data['validation'], data['test']
@@ -56,29 +55,17 @@ for example in train_ds:
   counter = counter + 1
 print(counter)
 
-#for example in training_ds:
-#  print(example[0].shape)
-
-#display the resized images
-#fig = tfds.show_examples(training_ds, ds_info, rows = 4, cols = 4)
-
 model = keras.Sequential([
     keras.layers.RandomFlip("horizontal_and_vertical"),
-    keras.layers.RandomRotation(0.2),
+    keras.layers.RandomRotation(1),
+    keras.layers.RandomZoom(0.5),
+    #line of testing!
     keras.Input((128, 128, 3)),
     keras.layers.Conv2D(16, 3, activation='relu'),
-    keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
-
-#this layer didnt make much difference
-#    keras.layers.Conv2D(16, 3, activation='relu'),
-#    keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
-#    keras.layers.Dropout(0.5),
-    
+    keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
     keras.layers.Flatten(),
     keras.layers.Dense(102, activation=tf.nn.softmax)
 ])
-
-#model.summary()
 
 model.compile(
     optimizer = keras.optimizers.Adam(learning_rate = 0.001),
@@ -86,5 +73,5 @@ model.compile(
     metrics = ["accuracy"]
 )
 
-model.fit(training_ds, epochs = 100, verbose=2)
+model.fit(training_ds, epochs = 200, verbose=2)
 model.evaluate(testing_ds)
