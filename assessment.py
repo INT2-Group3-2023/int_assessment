@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[12]:
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -43,17 +40,21 @@ def resize_with_crop_or_pad(image, label):
 AUTO = tf.data.experimental.AUTOTUNE
 BATCH_SIZE = 128
 
-#training_ds = (train_ds.map(crop_image))
+training_ds = (training_ds.map(crop_image))
 training_ds = (train_ds.map(scale_resize_image))
 #training_ds = (training_ds.map(rgb_convert))
 #training_ds = train_ds.map(resize_with_crop_or_pad)
 training_ds = training_ds.batch(BATCH_SIZE)
 
-#testing_ds = (test_ds.map(crop_image))
-testing_ds = (test_ds.map(scale_resize_image))
+testing_ds = (test_ds.map(crop_image))
+testing_ds = (testing_ds.map(scale_resize_image))
 #testing_ds = testing_ds.map(rgb_convert)
 #testing_ds = test_ds.map(resize_with_crop_or_pad)
 testing_ds = testing_ds.batch(BATCH_SIZE)
+
+validation_ds = (valid_ds.map(crop_image))
+validation_ds = (validation_ds.map(scale_resize_image))
+validation_ds = validation_ds.batch(BATCH_SIZE)
 
 counter = 0
 for example in train_ds:
@@ -74,7 +75,7 @@ def visualise(original, augmented):
 def show_augmentations():
     image, label = next(iter(train_ds))
     # line of augmentation
-    augmented = tf.image.resize_with_crop_or_pad(image, 752, 752)
+    augmented = tf.image.adjust_contrast(image, 2)
     visualise(image, augmented)
     plt.show()
 
@@ -86,35 +87,36 @@ model = keras.Sequential([
     keras.layers.RandomFlip("horizontal_and_vertical"),
     keras.layers.RandomRotation(1),
     keras.layers.RandomZoom(0.5),
-    #keras.layers.RandomContrast(1),
-    #keras.layers.RandomBrightness(0.2/255),
+    keras.layers.RandomContrast((0, 1)),
+    keras.layers.RandomBrightness(0.2/255),
+    keras.layers.RandomTranslation(0.1, 0.1),
     # line of testing!
-    keras.Input((128, 128, 3)),
-    keras.layers.Conv2D(4, 3, activation='relu'),
-    #keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
-    
-    keras.layers.Conv2D(8, 3, activation='relu'),
-    keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
-    #keras.layers.Dropout(0.2),
-    
-    keras.layers.Conv2D(16, 3, activation='relu'),
-    keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
-    #keras.layers.Dropout(0.2),
+    keras.Input((224, 224, 3)),
+    keras.layers.Conv2D(64, 3, activation='relu'),
+    keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
+    keras.layers.Dropout(0.05),
     
     keras.layers.Conv2D(32, 3, activation='relu'),
     keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
-    #keras.layers.Dropout(0.2),
+    keras.layers.Dropout(0.05),
+    
+    keras.layers.Conv2D(16, 3, activation='relu'),
+    keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
+    keras.layers.Dropout(0.05),
     
     keras.layers.Conv2D(64, 3, activation='relu'),
     keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
-    #keras.layers.Dropout(0.2),
+    keras.layers.Dropout(0.05),
+    
+    keras.layers.Conv2D(128, 3, activation='relu'),
+    keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
     
     keras.layers.Flatten(),
     keras.layers.Dense(102, activation=tf.nn.softmax)
 ])
 
 model.compile(
-    optimizer = keras.optimizers.Adam(learning_rate = 0.001),
+    optimizer = keras.optimizers.Adam(learning_rate = 0.0005),
     loss = keras.losses.SparseCategoricalCrossentropy(),
     metrics = ["accuracy"]
 )
@@ -127,16 +129,16 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     mode='max',
     save_best_only=True)
 
-epochs = 300
+epochs = 200
 
-history = model.fit(training_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback])
+history = model.fit(training_ds, validation_data = validation_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback])
 model.load_weights(checkpoint_filepath)
 
 plt.figure(figsize=(8, 8))
 epochs_range= range(epochs)
 plt.plot( epochs_range, history.history['accuracy'], label="Training Accuracy")
-#plt.plot(epochs_range, history.history['val_accuracy'], label="Validation Accuracy")
-plt.axis(ymin=0.85,ymax=1)
+plt.plot(epochs_range, history.history['val_accuracy'], label="Validation Accuracy")
+plt.axis(ymin=0.00,ymax=1)
 plt.grid()
 plt.title('Model Accuracy')
 plt.ylabel('Accuracy')
@@ -145,4 +147,19 @@ plt.legend(['train', 'validation'])
 plt.show()
 plt.savefig('output-plot.png')
 
+plt.figure(figsize=(8, 8))
+epochs_range= range(epochs)
+plt.plot( epochs_range, history.history['loss'], label="Training Loss")
+plt.plot(epochs_range, history.history['val_loss'], label="Validation Loss")
+plt.axis(ymin=0.00,ymax=10)
+plt.grid()
+plt.title('Model Loss')
+plt.ylabel('Loss')
+plt.xlabel('Epochs')
+plt.legend(['train', 'validation'])
+plt.show()
+plt.savefig('output-plot.png')
+
 model.evaluate(testing_ds)
+
+model.evaluate(validation_ds)
