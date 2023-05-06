@@ -8,6 +8,7 @@ from tensorflow import keras
 from keras import layers
 import tensorflow_datasets as tfds
 
+
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 data, ds_info = tfds.load('oxford_flowers102',
@@ -19,6 +20,7 @@ train_ds, valid_ds, test_ds = data['train'], data['validation'], data['test']
 type(train_ds)
 
 print(type(train_ds))
+
 
 def scale_resize_image(image, label):
     image = tf.image.convert_image_dtype(image, tf.float32) # equivalent to dividing image pixels by 255
@@ -36,6 +38,7 @@ def crop_image(image, label):
 def resize_with_crop_or_pad(image, label):
     image = tf.image.resize_with_crop_or_pad(image, 752, 752)
     return (image, label)
+
 
 AUTO = tf.data.experimental.AUTOTUNE
 BATCH_SIZE = 64
@@ -81,12 +84,12 @@ def show_augmentations():
     visualise(image, augmented)
     plt.show()
 
-
 show_augmentations()
+
 
 model = keras.Sequential([
     #keras.layers.CenterCrop(500, 500),
-    #keras.layers.Resizing(128, 128),
+    #keras.layers.Resizing(128, 128), 
     keras.layers.RandomFlip("horizontal_and_vertical"),
     keras.layers.RandomRotation(1),
     keras.layers.RandomZoom(0.5),
@@ -105,9 +108,9 @@ model = keras.Sequential([
     keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
     keras.layers.Dropout(0.05),
     
-    keras.layers.Conv2D(16, 3, activation='relu'),
-    keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
-    keras.layers.Dropout(0.05),
+    #keras.layers.Conv2D(16, 3, activation='relu'),
+    #keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
+    #keras.layers.Dropout(0.05),
     
     keras.layers.Conv2D(64, 3, activation='relu'),
     keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
@@ -137,10 +140,12 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 
 earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience = 20)
 
+
 epochs = 100
 
 history = model.fit(training_ds, validation_data = validation_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback, earlystop])
 model.load_weights(checkpoint_filepath)
+
 
 plt.figure(figsize=(8, 8))
 print(len(history.history['accuracy']))
@@ -169,6 +174,7 @@ plt.xlabel('Epochs')
 plt.legend(['train', 'validation'])
 plt.show()
 plt.savefig('output-plot.png')
+
 
 model.evaluate(testing_ds)
 
