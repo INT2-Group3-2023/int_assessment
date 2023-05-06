@@ -8,7 +8,6 @@ from tensorflow import keras
 from keras import layers
 import tensorflow_datasets as tfds
 
-
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 data, ds_info = tfds.load('oxford_flowers102',
@@ -20,7 +19,6 @@ train_ds, valid_ds, test_ds = data['train'], data['validation'], data['test']
 type(train_ds)
 
 print(type(train_ds))
-
 
 def scale_resize_image(image, label):
     image = tf.image.convert_image_dtype(image, tf.float32) # equivalent to dividing image pixels by 255
@@ -86,7 +84,6 @@ def show_augmentations():
 
 show_augmentations()
 
-
 model = keras.Sequential([
     #keras.layers.CenterCrop(500, 500),
     #keras.layers.Resizing(128, 128), 
@@ -138,12 +135,13 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     mode='max',
     save_best_only=True)
 
-earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience = 20)
+earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience = 10)
 
+reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor = 0.2, patience = 5, min_lr = 0.00001)
 
-epochs = 100
+epochs = 300
 
-history = model.fit(training_ds, validation_data = validation_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback, earlystop])
+history = model.fit(training_ds, validation_data = validation_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback, earlystop, reduce_lr])
 model.load_weights(checkpoint_filepath)
 
 
@@ -161,7 +159,6 @@ plt.legend(['train', 'validation'])
 plt.show()
 plt.savefig('output-plot.png')
 
-
 plt.figure(figsize=(8, 8))
 epochs_range= range((len(history.history['accuracy'])))
 plt.plot( epochs_range, history.history['loss'], label="Training Loss")
@@ -174,7 +171,6 @@ plt.xlabel('Epochs')
 plt.legend(['train', 'validation'])
 plt.show()
 plt.savefig('output-plot.png')
-
 
 model.evaluate(testing_ds)
 
