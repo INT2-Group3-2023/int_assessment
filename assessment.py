@@ -38,10 +38,10 @@ def resize_with_crop_or_pad(image, label):
     return (image, label)
 
 AUTO = tf.data.experimental.AUTOTUNE
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 
-training_ds = (training_ds.map(crop_image))
-training_ds = (train_ds.map(scale_resize_image))
+training_ds = (train_ds.map(crop_image))
+training_ds = (training_ds.map(scale_resize_image))
 #training_ds = (training_ds.map(rgb_convert))
 #training_ds = train_ds.map(resize_with_crop_or_pad)
 training_ds = training_ds.batch(BATCH_SIZE)
@@ -56,10 +56,12 @@ validation_ds = (valid_ds.map(crop_image))
 validation_ds = (validation_ds.map(scale_resize_image))
 validation_ds = validation_ds.batch(BATCH_SIZE)
 
+
 counter = 0
 for example in train_ds:
   counter = counter + 1
 print(counter)
+
 
 def visualise(original, augmented):
     fig = plt.figure()
@@ -79,6 +81,7 @@ def show_augmentations():
     visualise(image, augmented)
     plt.show()
 
+
 show_augmentations()
 
 model = keras.Sequential([
@@ -87,9 +90,11 @@ model = keras.Sequential([
     keras.layers.RandomFlip("horizontal_and_vertical"),
     keras.layers.RandomRotation(1),
     keras.layers.RandomZoom(0.5),
-    keras.layers.RandomContrast((0, 1)),
+    #keras.layers.RandomContrast((0, 1)),
     keras.layers.RandomBrightness(0.2/255),
-    keras.layers.RandomTranslation(0.1, 0.1),
+    keras.layers.RandomTranslation(0.1, 0.1),    
+    keras.layers.BatchNormalization(),#standardise raw 0-1 input
+    
     # line of testing!
     keras.Input((224, 224, 3)),
     keras.layers.Conv2D(64, 3, activation='relu'),
@@ -115,8 +120,9 @@ model = keras.Sequential([
     keras.layers.Dense(102, activation=tf.nn.softmax)
 ])
 
+
 model.compile(
-    optimizer = keras.optimizers.Adam(learning_rate = 0.0005),
+    optimizer = keras.optimizers.Adam(learning_rate = 0.001),
     loss = keras.losses.SparseCategoricalCrossentropy(),
     metrics = ["accuracy"]
 )
@@ -125,17 +131,20 @@ checkpoint_filepath = '/tmp/checkpoint'
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_filepath,
     save_weights_only=True,
-    monitor='accuracy',
+    monitor='val_accuracy',
     mode='max',
     save_best_only=True)
 
-epochs = 200
+earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience = 20)
 
-history = model.fit(training_ds, validation_data = validation_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback])
+epochs = 100
+
+history = model.fit(training_ds, validation_data = validation_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback, earlystop])
 model.load_weights(checkpoint_filepath)
 
 plt.figure(figsize=(8, 8))
-epochs_range= range(epochs)
+print(len(history.history['accuracy']))
+epochs_range= range((len(history.history['accuracy'])))
 plt.plot( epochs_range, history.history['accuracy'], label="Training Accuracy")
 plt.plot(epochs_range, history.history['val_accuracy'], label="Validation Accuracy")
 plt.axis(ymin=0.00,ymax=1)
@@ -147,8 +156,9 @@ plt.legend(['train', 'validation'])
 plt.show()
 plt.savefig('output-plot.png')
 
+
 plt.figure(figsize=(8, 8))
-epochs_range= range(epochs)
+epochs_range= range((len(history.history['accuracy'])))
 plt.plot( epochs_range, history.history['loss'], label="Training Loss")
 plt.plot(epochs_range, history.history['val_loss'], label="Validation Loss")
 plt.axis(ymin=0.00,ymax=10)
