@@ -37,7 +37,6 @@ def resize_with_crop_or_pad(image, label):
     image = tf.image.resize_with_crop_or_pad(image, 752, 752)
     return (image, label)
 
-
 AUTO = tf.data.experimental.AUTOTUNE
 BATCH_SIZE = 64
 
@@ -56,7 +55,6 @@ testing_ds = testing_ds.batch(BATCH_SIZE)
 validation_ds = (valid_ds.map(crop_image))
 validation_ds = (validation_ds.map(scale_resize_image))
 validation_ds = validation_ds.batch(BATCH_SIZE)
-
 
 counter = 0
 for example in train_ds:
@@ -82,7 +80,9 @@ def show_augmentations():
     visualise(image, augmented)
     plt.show()
 
+
 show_augmentations()
+
 
 model = keras.Sequential([
     #keras.layers.CenterCrop(500, 500),
@@ -135,15 +135,20 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     mode='max',
     save_best_only=True)
 
-earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience = 10)
+earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience = 100)
 
-reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor = 0.2, patience = 5, min_lr = 0.00001)
+reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor = 0.9, patience = 100, min_lr = 0.00001)
 
-epochs = 300
+epochs = 200
 
-history = model.fit(training_ds, validation_data = validation_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback, earlystop, reduce_lr])
+#change this on your local machine
+model = keras.models.load_model('/home/yaseen/models')
+
+history = model.fit(training_ds, validation_data = validation_ds, epochs = epochs, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
 model.load_weights(checkpoint_filepath)
 
+#change this on your local machine
+model.save('/home/yaseen/models')
 
 plt.figure(figsize=(8, 8))
 print(len(history.history['accuracy']))
