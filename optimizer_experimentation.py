@@ -237,10 +237,10 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor=
 
 # model = keras.models.load_model('/workspace/model1')
 
-adam_history = adam_model.fit(training_ds, validation_data=validation_ds, epochs=700, verbose=2,
+adam_history = adam_model.fit(training_ds, validation_data=validation_ds, epochs=300, verbose=2,
                     callbacks=[model_checkpoint_callback, reduce_lr])
 
-sgd_history = sgd_model.fit(training_ds, validation_data=validation_ds, epochs=700, verbose=2,
+sgd_history = sgd_model.fit(training_ds, validation_data=validation_ds, epochs=300, verbose=2,
                     callbacks=[model_checkpoint_callback, reduce_lr])
 
 plot_graph()
