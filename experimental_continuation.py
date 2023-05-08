@@ -24,6 +24,52 @@ def scale_resize_image(image, label):
 def crop_image(image, label):
     image = tf.image.resize_with_crop_or_pad(image, 500, 500)
     return (image, label)
+
+def visualise(original, augmented):
+    fig = plt.figure()
+    plt.subplot(1,2,1)
+    plt.title("original")
+    plt.imshow(original)
+
+    plt.subplot(1,2,2)
+    plt.title("augmented")
+    plt.imshow(augmented)
+
+def show_augmentations():
+    image, label = next(iter(train_ds))
+    # line of augmentation
+    augmented = tf.image.adjust_contrast(image, 2)
+    visualise(image, augmented)
+    plt.show()
+
+def plot_graph():
+    plt.figure(figsize=(8, 8))
+    print(len(history.history['accuracy']))
+    epochs_range = range((len(history.history['accuracy'])))
+    plt.plot(epochs_range, history.history['accuracy'], label="Training Accuracy")
+    plt.plot(epochs_range, history.history['val_accuracy'], label="Validation Accuracy")
+    plt.axis(ymin=0.00, ymax=1)
+    plt.grid()
+    plt.title('Model Accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epochs')
+    plt.legend(['train', 'validation'])
+    plt.show()
+    plt.savefig('output-plot.png')
+
+    plt.figure(figsize=(8, 8))
+    epochs_range = range((len(history.history['accuracy'])))
+    plt.plot(epochs_range, history.history['loss'], label="Training Loss")
+    plt.plot(epochs_range, history.history['val_loss'], label="Validation Loss")
+    plt.axis(ymin=0.00, ymax=10)
+    plt.grid()
+    plt.title('Model Loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epochs')
+    plt.legend(['train', 'validation'])
+    plt.show()
+    plt.savefig('output-plot.png')
+
     
 AUTO = tf.data.experimental.AUTOTUNE
 BATCH_SIZE = 8
@@ -173,7 +219,9 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor 
 
 #model = keras.models.load_model('/workspace/model1')
 
-model.fit(training_ds, validation_data = validation_ds, epochs = 700, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
+history = model.fit(training_ds, validation_data = validation_ds, epochs = 700, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
+
+plot_graph()
 
 model.evaluate(testing_ds)
 
