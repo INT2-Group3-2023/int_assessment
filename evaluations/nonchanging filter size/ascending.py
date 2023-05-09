@@ -1,4 +1,8 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[2]:
+
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,7 +17,7 @@ from tensorflow.keras.layers import GlobalAvgPool2D
 from tensorflow.keras import Model
 
 data, ds_info = tfds.load('oxford_flowers102',
-                          with_info=True,
+                         with_info=True,
                           as_supervised=True,
                           shuffle_files = True)
 train_ds, valid_ds, test_ds = data['train'], data['validation'], data['test']
@@ -26,32 +30,6 @@ def scale_resize_image(image, label):
 def crop_image(image, label):
     image = tf.image.resize_with_crop_or_pad(image, 500, 500)
     return (image, label)
-
-AUTO = tf.data.experimental.AUTOTUNE
-BATCH_SIZE = 8
-
-#data pre-processing:
-training_ds = (train_ds.map(crop_image))
-training_ds = (training_ds.map(scale_resize_image))
-training_ds = training_ds.batch(BATCH_SIZE)
-
-testing_ds = (test_ds.map(crop_image))
-testing_ds = (testing_ds.map(scale_resize_image))
-testing_ds = testing_ds.batch(BATCH_SIZE)
-
-validation_ds = (valid_ds.map(crop_image))
-validation_ds = (validation_ds.map(scale_resize_image))
-validation_ds = validation_ds.batch(BATCH_SIZE)
-
-#data augmentation:
-def l(x):
-    x = keras.layers.RandomFlip("horizontal_and_vertical")(x)
-    x = keras.layers.RandomRotation(1)(x)
-    x = keras.layers.RandomZoom(0.5)(x)
-    x = keras.layers.RandomBrightness(0.2/255)(x)
-    x = keras.layers.RandomTranslation(0.1, 0.1)(x)
-    x = keras.layers.BatchNormalization()(x)
-    return x
 
 def visualise(original, augmented):
     fig = plt.figure()
@@ -70,37 +48,36 @@ def show_augmentations():
     visualise(image, augmented)
     plt.show()
 
-def plot_graph():
-    plt.figure(figsize=(8, 8))
-    print(len(history.history['accuracy']))
-    epochs_range = range((len(history.history['accuracy'])))
-    plt.plot(epochs_range, history.history['accuracy'], label="Training Accuracy")
-    plt.plot(epochs_range, history.history['val_accuracy'], label="Validation Accuracy")
-    plt.axis(ymin=0.00, ymax=1)
-    plt.grid()
-    plt.title('Model Accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epochs')
-    plt.legend(['train', 'validation'])
-    plt.show()
-    plt.savefig('output-plot.png')
+AUTO = tf.data.experimental.AUTOTUNE
+BATCH_SIZE = 4
 
-    plt.figure(figsize=(8, 8))
-    epochs_range = range((len(history.history['accuracy'])))
-    plt.plot(epochs_range, history.history['loss'], label="Training Loss")
-    plt.plot(epochs_range, history.history['val_loss'], label="Validation Loss")
-    plt.axis(ymin=0.00, ymax=10)
-    plt.grid()
-    plt.title('Model Loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epochs')
-    plt.legend(['train', 'validation'])
-    plt.show()
-    plt.savefig('output-plot.png')
+#data pre-processing:
+
+training_ds = (train_ds.map(crop_image))
+training_ds = (training_ds.map(scale_resize_image))
+training_ds = training_ds.batch(BATCH_SIZE)
+
+testing_ds = (test_ds.map(crop_image))
+testing_ds = (testing_ds.map(scale_resize_image))
+testing_ds = testing_ds.batch(BATCH_SIZE)
+
+validation_ds = (valid_ds.map(crop_image))
+validation_ds = (validation_ds.map(scale_resize_image))
+validation_ds = validation_ds.batch(BATCH_SIZE)
+
+#data augmentation (these functions will only be active during model.fit and will deactivate for model.evaluate)
+def l(x):
+    x = keras.layers.RandomFlip("horizontal_and_vertical")(x)
+    x = keras.layers.RandomRotation(1)(x)
+    x = keras.layers.RandomZoom(0.5)(x)
+    x = keras.layers.RandomBrightness(0.2/255)(x)
+    x = keras.layers.RandomTranslation(0.1, 0.1)(x)
+    x = keras.layers.BatchNormalization()(x)
+    return x
 
 input = keras.layers.Input(shape = (299,299,3))
 
-tensorA = (Conv2D(filters = 64, kernel_size = 3, strides = 2, padding = 'same', use_bias = False)(l(input)))
+tensorA = (Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = 'same', use_bias = False)(l(input)))
 tensorA = (BatchNormalization()(tensorA))
 tensorA = (ReLU()(tensorA))
 
@@ -108,59 +85,59 @@ tensorA = (Conv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', 
 tensorA = (BatchNormalization()(tensorA))
 tensorB = (ReLU()(tensorA))
     
-tensorA = (SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorB))
+tensorA = (SeparableConv2D(filters = 128, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorB))
 tensorA = (BatchNormalization()(tensorA))
 tensorA = (ReLU()(tensorA))
 
-tensorA = (SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA))
+tensorA = (SeparableConv2D(filters = 128, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA))
 tensorA = (BatchNormalization()(tensorA))
 tensorA = (MaxPool2D(pool_size=3, strides=2, padding = 'same')(tensorA))
     
-tensorB = (Conv2D(filters = 64, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB))
+tensorB = (Conv2D(filters = 128, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB))
 tensorB = (BatchNormalization()(tensorB))
 tensorA = Add()([tensorB,tensorA])
     
 tensorA = ReLU()(tensorA)
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 256, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 tensorA = ReLU()(tensorA)
 
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 256, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 tensorA = MaxPool2D(pool_size=3, strides=2, padding = 'same')(tensorA)
     
-tensorB = Conv2D(filters = 64, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
+tensorB = Conv2D(filters = 256, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
 tensorB = BatchNormalization()(tensorB)
 tensorA = Add()([tensorB,tensorA])
     
 tensorA = ReLU()(tensorA)
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 tensorA = ReLU()(tensorA)
 
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = MaxPool2D(pool_size=3, strides=2, padding = 'same')(tensorA)
     
-tensorB = Conv2D(filters = 64, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
+tensorB = Conv2D(filters = 728, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
 tensorB = BatchNormalization()(tensorB)
 tensorA = Add()([tensorB,tensorA])
 
 tensorB = tensorA
 
 tensorA = ReLU()(tensorB)
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = ReLU()(tensorA)
 
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = ReLU()(tensorA)
 
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = ReLU()(tensorA)
@@ -170,27 +147,27 @@ tensorB = Add()([tensorB,tensorA])
 tensorB = tensorA
 tensorA = ReLU()(tensorB)
 
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = ReLU()(tensorA)
 
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 1024, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = MaxPool2D(pool_size = 3, strides = 2, padding ='same')(tensorA)
     
-tensorB = Conv2D(filters = 64, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
+tensorB = Conv2D(filters = 1024, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
 tensorB = BatchNormalization()(tensorB)
 
 tensorA = Add()([tensorB,tensorA])
 
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 1536, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = ReLU()(tensorA)
 
-tensorA = SeparableConv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = SeparableConv2D(filters = 2048, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = GlobalAvgPool2D()(tensorA)
@@ -219,10 +196,9 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor 
 
 #model = keras.models.load_model('/workspace/model1')
 
-EPOCHS = 300
-history = model.fit(training_ds, validation_data = validation_ds, epochs = EPOCHS, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
+history = model.fit(training_ds, validation_data = validation_ds, epochs = 5, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
 
-file = open('uniformConv2DFilters.txt', 'w')
+file = open('ascending.txt', 'w')
 file.writelines(','.join(map(str, history.history['accuracy'])))
 file.writelines('\n')
 file.writelines(','.join(map(str, history.history['val_accuracy'])))
@@ -232,8 +208,13 @@ file.writelines('\n')
 file.writelines(','.join(map(str, history.history['val_loss'])))
 file.close()
 
+model.evaluate(testing_ds)
+
 #model.save('/workspace/savedmodels')
 
-plot_graph()
 
-history = model.evaluate(testing_ds)
+# In[ ]:
+
+
+
+

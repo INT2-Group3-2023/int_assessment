@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -222,7 +220,7 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor 
 EPOCHS = 300
 history = model.fit(training_ds, validation_data = validation_ds, epochs = EPOCHS, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
 
-file = open('uniformConv2DFilters.txt', 'w')
+file = open('uniformfilter.txt', 'w')
 file.writelines(','.join(map(str, history.history['accuracy'])))
 file.writelines('\n')
 file.writelines(','.join(map(str, history.history['val_accuracy'])))
@@ -232,8 +230,8 @@ file.writelines('\n')
 file.writelines(','.join(map(str, history.history['val_loss'])))
 file.close()
 
-#model.save('/workspace/savedmodels')
-
 plot_graph()
 
-history = model.evaluate(testing_ds)
+model.evaluate(testing_ds)
+
+#model.save('/workspace/savedmodels')

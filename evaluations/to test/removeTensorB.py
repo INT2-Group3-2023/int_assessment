@@ -102,88 +102,88 @@ input = keras.layers.Input(shape = (299,299,3))
 
 tensorA = (Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = 'same', use_bias = False)(l(input)))
 tensorA = (BatchNormalization()(tensorA))
-#tensorA = (ReLU()(tensorA))
+tensorA = (ReLU()(tensorA))
 
 tensorA = (Conv2D(filters = 64, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA))
 tensorA = (BatchNormalization()(tensorA))
-tensorB = (ReLU()(tensorA))
+#tensorB = (ReLU()(tensorA))
     
-tensorA = (SeparableConv2D(filters = 128, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorB))
-tensorA = (BatchNormalization()(tensorA))
-#tensorA = (ReLU()(tensorA))
+#tensorA = (SeparableConv2D(filters = 128, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorB))
+#tensorA = (BatchNormalization()(tensorA))
+tensorA = (ReLU()(tensorA))
 
 tensorA = (SeparableConv2D(filters = 128, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA))
 tensorA = (BatchNormalization()(tensorA))
 tensorA = (MaxPool2D(pool_size=3, strides=2, padding = 'same')(tensorA))
     
-tensorB = (Conv2D(filters = 128, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB))
-tensorB = (BatchNormalization()(tensorB))
-tensorA = Add()([tensorB,tensorA])
+#tensorB = (Conv2D(filters = 128, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB))
+#tensorB = (BatchNormalization()(tensorB))
+#tensorA = Add()([tensorB,tensorA])
     
-#tensorA = ReLU()(tensorA)
+tensorA = ReLU()(tensorA)
 tensorA = SeparableConv2D(filters = 256, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
-#tensorA = ReLU()(tensorA)
+tensorA = ReLU()(tensorA)
 
 tensorA = SeparableConv2D(filters = 256, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 tensorA = MaxPool2D(pool_size=3, strides=2, padding = 'same')(tensorA)
     
-tensorB = Conv2D(filters = 256, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
-tensorB = BatchNormalization()(tensorB)
-tensorA = Add()([tensorB,tensorA])
+#tensorB = Conv2D(filters = 256, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
+#tensorB = BatchNormalization()(tensorB)
+#tensorA = Add()([tensorB,tensorA])
     
-#tensorA = ReLU()(tensorA)
+tensorA = ReLU()(tensorA)
 tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
-#tensorA = ReLU()(tensorA)
+tensorA = ReLU()(tensorA)
 
 tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = MaxPool2D(pool_size=3, strides=2, padding = 'same')(tensorA)
     
-tensorB = Conv2D(filters = 728, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
-tensorB = BatchNormalization()(tensorB)
-tensorA = Add()([tensorB,tensorA])
+#tensorB = Conv2D(filters = 728, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
+#tensorB = BatchNormalization()(tensorB)
+#tensorA = Add()([tensorB,tensorA])
 
-tensorB = tensorA
+#tensorB = tensorA
 
-tensorA = ReLU()(tensorB)
+#tensorA = ReLU()(tensorB)
 tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
-#tensorA = ReLU()(tensorA)
-
-tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
-tensorA = BatchNormalization()(tensorA)
-
-#tensorA = ReLU()(tensorA)
+tensorA = ReLU()(tensorA)
 
 tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
-#tensorA = ReLU()(tensorA)
-
-tensorB = Add()([tensorB,tensorA])
-
-tensorB = tensorA
-tensorA = ReLU()(tensorB)
+tensorA = ReLU()(tensorA)
 
 tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
-#tensorA = ReLU()(tensorA)
+tensorA = ReLU()(tensorA)
+
+#tensorB = Add()([tensorB,tensorA])
+
+#tensorB = tensorA
+#tensorA = ReLU()(tensorB)
+
+tensorA = SeparableConv2D(filters = 728, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
+tensorA = BatchNormalization()(tensorA)
+
+tensorA = ReLU()(tensorA)
 
 tensorA = SeparableConv2D(filters = 1024, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
 
 tensorA = MaxPool2D(pool_size = 3, strides = 2, padding ='same')(tensorA)
     
-tensorB = Conv2D(filters = 1024, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
-tensorB = BatchNormalization()(tensorB)
+#tensorB = Conv2D(filters = 1024, kernel_size = 1, strides = 2, padding = 'same', use_bias = False)(tensorB)
+#tensorB = BatchNormalization()(tensorB)
 
-tensorA = Add()([tensorB,tensorA])
+#tensorA = Add()([tensorB,tensorA])
 
 tensorA = SeparableConv2D(filters = 1536, kernel_size = 3, strides = 1, padding = 'same', use_bias = False)(tensorA)
 tensorA = BatchNormalization()(tensorA)
@@ -219,11 +219,21 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor 
 
 #model = keras.models.load_model('/workspace/model1')
 
-EPOCHS = 700
+EPOCHS = 300
 history = model.fit(training_ds, validation_data = validation_ds, epochs = EPOCHS, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
+
+file = open('removeTensorB.txt', 'w')
+file.writelines(','.join(map(str, history.history['accuracy'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, history.history['val_accuracy'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, history.history['loss'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, history.history['val_loss'])))
+file.close()
+
+#model.save('/workspace/savedmodels')
 
 plot_graph()
 
-model.evaluate(testing_ds)
-
-#model.save('/workspace/savedmodels')
+history = model.evaluate(testing_ds)
