@@ -85,7 +85,7 @@ def plot_graph():
 
 
 AUTO = tf.data.experimental.AUTOTUNE
-BATCH_SIZE = 8
+BATCH_SIZE = 2
 
 # data pre-processing:
 
@@ -237,7 +237,7 @@ adam_model.compile(
 )
 
 adam_history = adam_model.fit(training_ds, validation_data=validation_ds, epochs=5, verbose=2,
-                    callbacks=[model_checkpoint_callback, reduce_lr])
+                              callbacks=[model_checkpoint_callback, reduce_lr])
 
 # write results to file before clearing the session for SGD
 file = open('history.txt', 'w')
@@ -259,7 +259,7 @@ sgd_model.compile(
 )
 
 sgd_history = sgd_model.fit(training_ds, validation_data=validation_ds, epochs=5, verbose=2,
-                    callbacks=[model_checkpoint_callback, reduce_lr])
+                            callbacks=[model_checkpoint_callback, reduce_lr])
 
 plot_graph()
 
