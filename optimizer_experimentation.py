@@ -49,10 +49,14 @@ def show_augmentations():
 
 def plot_graph():
     plt.figure(figsize=(8, 8))
-    print(len(adam_history.history['accuracy']))
-    epochs_range = range((len(adam_history.history['accuracy'])))
-    plt.plot(epochs_range, adam_history.history['accuracy'], label="Training Accuracy [Adam]")
-    plt.plot(epochs_range, adam_history.history['val_accuracy'], label="Validation Accuracy [Adam]")
+    history = open("history.txt")
+    adam_acc = [float(x) for x in history.readline().strip().split(',')]
+    adam_val_acc = [float(x) for x in history.readline().strip().split(',')]
+    adam_loss = [float(x) for x in history.readline().strip().split(',')]
+    adam_val_loss = [float(x) for x in history.readline().strip().split(',')]
+    epochs_range = range((len(adam_acc)))
+    plt.plot(epochs_range, adam_acc, label="Training Accuracy [Adam]")
+    plt.plot(epochs_range, adam_val_acc, label="Validation Accuracy [Adam]")
     plt.plot(epochs_range, sgd_history.history['accuracy'], label="Training Accuracy [SGD]")
     plt.plot(epochs_range, sgd_history.history['val_accuracy'], label="Validation Accuracy [SGD]")
     plt.axis(ymin=0.00, ymax=1)
@@ -66,10 +70,10 @@ def plot_graph():
 
     plt.figure(figsize=(8, 8))
     epochs_range = range((len(adam_history.history['accuracy'])))
-    plt.plot(epochs_range, adam_history.history['loss'], label="Training Loss")
-    plt.plot(epochs_range, adam_history.history['val_loss'], label="Validation Loss")
-    plt.plot(epochs_range, sgd_history.history['loss'], label="Training Loss")
-    plt.plot(epochs_range, sgd_history.history['val_loss'], label="Validation Loss")
+    plt.plot(epochs_range, adam_loss, label="Training Loss [Adam]")
+    plt.plot(epochs_range, adam_val_loss, label="Validation Loss [Adam]")
+    plt.plot(epochs_range, sgd_history.history['loss'], label="Training Loss [SGD]")
+    plt.plot(epochs_range, sgd_history.history['val_loss'], label="Validation Loss [SGD]")
     plt.axis(ymin=0.00, ymax=10)
     plt.grid()
     plt.title('Model Loss')
@@ -209,22 +213,6 @@ tensorA = GlobalAvgPool2D()(tensorA)
 tensorA = Dense(units=102, activation='softmax')(tensorA)
 output = tensorA
 
-adam_model = Model(inputs=input, outputs=output)
-#adam_model.summary()
-sgd_model = Model(inputs=input, outputs=output)
-
-adam_model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=0.001),
-    loss=keras.losses.SparseCategoricalCrossentropy(),
-    metrics=["accuracy"]
-)
-
-sgd_model.compile(
-    optimizer=keras.optimizers.SGD(learning_rate=0.001),
-    loss=keras.losses.SparseCategoricalCrossentropy(),
-    metrics=["accuracy"]
-)
-
 checkpoint_filepath = '/tmp/checkpoint'
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_filepath,
@@ -237,15 +225,45 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor=
 
 # model = keras.models.load_model('/workspace/model1')
 
-adam_history = adam_model.fit(training_ds, validation_data=validation_ds, epochs=300, verbose=2,
+adam_model = Model(inputs=input, outputs=output)
+adam_model.summary()
+sgd_model = Model(inputs=input, outputs=output)
+sgd_model.summary()
+
+adam_model.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=0.001),
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    metrics=["accuracy"]
+)
+
+adam_history = adam_model.fit(training_ds, validation_data=validation_ds, epochs=5, verbose=2,
                     callbacks=[model_checkpoint_callback, reduce_lr])
 
-sgd_history = sgd_model.fit(training_ds, validation_data=validation_ds, epochs=300, verbose=2,
+# write results to file before clearing the session for SGD
+file = open('history.txt', 'w')
+file.writelines(','.join(map(str, adam_history.history['accuracy'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, adam_history.history['val_accuracy'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, adam_history.history['loss'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, adam_history.history['val_loss'])))
+file.close()
+
+keras.backend.clear_session()
+
+sgd_model.compile(
+    optimizer=keras.optimizers.SGD(learning_rate=0.001),
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    metrics=["accuracy"]
+)
+
+sgd_history = sgd_model.fit(training_ds, validation_data=validation_ds, epochs=5, verbose=2,
                     callbacks=[model_checkpoint_callback, reduce_lr])
 
 plot_graph()
 
-adam_history.evaluate(testing_ds)
-sgd_history.evaluate(testing_ds)
+adam_model.evaluate(testing_ds)
+sgd_model.evaluate(testing_ds)
 
 # model.save('/workspace/savedmodels')
