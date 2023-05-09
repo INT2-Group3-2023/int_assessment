@@ -24,6 +24,32 @@ def scale_resize_image(image, label):
 def crop_image(image, label):
     image = tf.image.resize_with_crop_or_pad(image, 500, 500)
     return (image, label)
+    
+AUTO = tf.data.experimental.AUTOTUNE
+BATCH_SIZE = 8
+
+#data pre-processing:
+training_ds = (train_ds.map(crop_image))
+training_ds = (training_ds.map(scale_resize_image))
+training_ds = training_ds.batch(BATCH_SIZE)
+
+testing_ds = (test_ds.map(crop_image))
+testing_ds = (testing_ds.map(scale_resize_image))
+testing_ds = testing_ds.batch(BATCH_SIZE)
+
+validation_ds = (valid_ds.map(crop_image))
+validation_ds = (validation_ds.map(scale_resize_image))
+validation_ds = validation_ds.batch(BATCH_SIZE)
+
+#data augmentation:
+def l(x):
+    x = keras.layers.RandomFlip("horizontal_and_vertical")(x)
+    x = keras.layers.RandomRotation(1)(x)
+    x = keras.layers.RandomZoom(0.5)(x)
+    x = keras.layers.RandomBrightness(0.2/255)(x)
+    x = keras.layers.RandomTranslation(0.1, 0.1)(x)
+    x = keras.layers.BatchNormalization()(x)
+    return x
 
 def visualise(original, augmented):
     fig = plt.figure()
@@ -69,34 +95,6 @@ def plot_graph():
     plt.legend(['train', 'validation'])
     plt.show()
     plt.savefig('output-plot.png')
-
-    
-AUTO = tf.data.experimental.AUTOTUNE
-BATCH_SIZE = 8
-
-#data pre-processing:
-
-training_ds = (train_ds.map(crop_image))
-training_ds = (training_ds.map(scale_resize_image))
-training_ds = training_ds.batch(BATCH_SIZE)
-
-testing_ds = (test_ds.map(crop_image))
-testing_ds = (testing_ds.map(scale_resize_image))
-testing_ds = testing_ds.batch(BATCH_SIZE)
-
-validation_ds = (valid_ds.map(crop_image))
-validation_ds = (validation_ds.map(scale_resize_image))
-validation_ds = validation_ds.batch(BATCH_SIZE)
-
-#data augmentation (these functions will only be active during model.fit and will deactivate for model.evaluate)
-def l(x):
-    x = keras.layers.RandomFlip("horizontal_and_vertical")(x)
-    x = keras.layers.RandomRotation(1)(x)
-    x = keras.layers.RandomZoom(0.5)(x)
-    x = keras.layers.RandomBrightness(0.2/255)(x)
-    x = keras.layers.RandomTranslation(0.1, 0.1)(x)
-    x = keras.layers.BatchNormalization()(x)
-    return x
 
 input = keras.layers.Input(shape = (299,299,3))
 
@@ -219,7 +217,8 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor 
 
 #model = keras.models.load_model('/workspace/model1')
 
-history = model.fit(training_ds, validation_data = validation_ds, epochs = 700, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
+EPOCHS = 700
+history = model.fit(training_ds, validation_data = validation_ds, epochs = EPOCHS, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
 
 plot_graph()
 
