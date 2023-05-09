@@ -219,11 +219,21 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor 
 
 #model = keras.models.load_model('/workspace/model1')
 
-EPOCHS = 700
+EPOCHS = 300
 history = model.fit(training_ds, validation_data = validation_ds, epochs = EPOCHS, verbose=2, callbacks = [model_checkpoint_callback, reduce_lr])
+
+file = open('uniformConv2DFilters.txt', 'w')
+file.writelines(','.join(map(str, history.history['accuracy'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, history.history['val_accuracy'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, history.history['loss'])))
+file.writelines('\n')
+file.writelines(','.join(map(str, history.history['val_loss'])))
+file.close()
+
+#model.save('/workspace/savedmodels')
 
 plot_graph()
 
-model.evaluate(testing_ds)
-
-#model.save('/workspace/savedmodels')
+history = model.evaluate(testing_ds)
