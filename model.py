@@ -197,7 +197,6 @@ tensorA = Dense(units = 102, activation = 'softmax')(tensorA)
 output = tensorA
 
 model = Model (inputs=input, outputs=output)
-model.summary()
 
 model.compile(
     optimizer = keras.optimizers.Adam(learning_rate = 0.001),
